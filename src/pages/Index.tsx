@@ -1,11 +1,142 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { generateMockData } from "@/utils/heatmapUtils";
+import { Detection, FloorPlanArea, TimeRange } from "@/types";
+import HeatmapVisualizer from "@/components/HeatmapVisualizer";
+import TimeSelector from "@/components/TimeSelector";
 
 const Index = () => {
+  const [detections, setDetections] = useState<Detection[]>([]);
+  const [timeRange, setTimeRange] = useState<TimeRange>({
+    start: Date.now() - (60 * 60 * 1000), // 1 hour ago
+    end: Date.now() // now
+  });
+  
+  // Exhibition floor plan areas
+  const exhibitionAreas: FloorPlanArea[] = [
+    { id: "entrance", name: "Main Entrance", x: 45, y: 5, width: 10, height: 5, type: "entrance" },
+    { id: "exhibit1", name: "Modern Art", x: 10, y: 15, width: 25, height: 25, type: "exhibit" },
+    { id: "exhibit2", name: "Sculptures", x: 10, y: 45, width: 25, height: 30, type: "exhibit" },
+    { id: "exhibit3", name: "Photography", x: 40, y: 15, width: 20, height: 20, type: "exhibit" },
+    { id: "exhibit4", name: "Interactive", x: 65, y: 15, width: 25, height: 25, type: "exhibit" },
+    { id: "exhibit5", name: "Digital Media", x: 40, y: 40, width: 20, height: 35, type: "exhibit" },
+    { id: "exhibit6", name: "Contemporary", x: 65, y: 45, width: 25, height: 30, type: "exhibit" },
+    { id: "passage1", name: "Main Hall", x: 40, y: 13, width: 20, height: 2, type: "passage" },
+    { id: "passage2", name: "North Gallery", x: 38, y: 15, width: 2, height: 60, type: "passage" },
+    { id: "passage3", name: "South Gallery", x: 60, y: 15, width: 2, height: 60, type: "passage" },
+    { id: "cafe", name: "Café", x: 40, y: 80, width: 20, height: 15, type: "exhibit" }
+  ];
+  
+  // Generate mock detection data on component mount
+  useEffect(() => {
+    const data = generateMockData(1000);
+    setDetections(data);
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="container py-6 space-y-6">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold">Exhibition Traffic Heatmap</h1>
+        <p className="text-muted-foreground">
+          Visualize visitor movement patterns throughout your exhibition space.
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>Time Filter</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TimeSelector 
+              timeRange={timeRange} 
+              onTimeRangeChange={setTimeRange} 
+            />
+          </CardContent>
+        </Card>
+        
+        <div className="lg:col-span-3 space-y-6">
+          <HeatmapVisualizer 
+            detections={detections} 
+            areas={exhibitionAreas}
+            timeRange={timeRange}
+          />
+            
+          <Tabs defaultValue="analytics">
+            <TabsList>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="setup">Setup Guide</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="analytics" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="py-4">
+                    <CardTitle className="text-sm font-medium">Total Visitors</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {detections.reduce((sum, d) => sum + d.count, 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Across all time periods
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="py-4">
+                    <CardTitle className="text-sm font-medium">Busiest Area</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">Modern Art</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      26% of total traffic
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="py-4">
+                    <CardTitle className="text-sm font-medium">Peak Time</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">2:00 PM - 4:00 PM</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Based on historical data
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="setup">
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <h3 className="font-semibold">How to Use This Tool</h3>
+                  <p>This exhibition traffic heatmap tool visualizes visitor movement patterns using detection data.</p>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">To implement with real data:</h4>
+                    <ol className="list-decimal pl-5 space-y-2">
+                      <li>Install person detection cameras throughout your exhibition space</li>
+                      <li>Configure each camera to log detection data with x/y coordinates</li>
+                      <li>Replace the mock data generation with API calls to your detection system</li>
+                      <li>Update the floor plan to match your exhibition layout</li>
+                    </ol>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    Currently using simulated data for demonstration purposes.
+                    Integrate with your detection system for real-time analytics.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
