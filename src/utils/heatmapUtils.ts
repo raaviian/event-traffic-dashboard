@@ -187,14 +187,15 @@ export const generateUniqueId = (): string => {
   return `area-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 };
 
+// Simplified default area with more reasonable size
 export const getDefaultArea = (): FloorPlanArea => {
   return {
     id: generateUniqueId(),
     name: 'New Area',
     x: 40,
     y: 40,
-    width: 20,
-    height: 20,
+    width: 15,
+    height: 15,
     type: 'exhibit'
   };
 };

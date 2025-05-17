@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Detection, FloorPlanArea, HeatmapConfig, HeatmapData, TimeRange } from '@/types';
 import { calculateIntensity, filterByTimeRange, formatTimestamp, getIntensityColor, processHeatmapData } from '@/utils/heatmapUtils';
 import FloorPlan from './FloorPlan';
@@ -22,6 +23,7 @@ const HeatmapVisualizer: React.FC<HeatmapVisualizerProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [heatmapConfig, setHeatmapConfig] = useState<HeatmapConfig>({
     radius: 25,
     blur: 15,
@@ -32,19 +34,36 @@ const HeatmapVisualizer: React.FC<HeatmapVisualizerProps> = ({
   const [peopleCounted, setPeopleCounted] = useState(0);
   const [hotspot, setHotspot] = useState<{x: number, y: number, count: number} | null>(null);
 
+  // Filter detections based on selected area
+  const filteredDetections = selectedAreaId 
+    ? detections.filter(detection => {
+        // Find which area this detection belongs to
+        const area = areas.find(area => {
+          // Check if detection coordinates are within this area's boundaries
+          return (
+            detection.x >= area.x && 
+            detection.x <= (area.x + area.width) && 
+            detection.y >= area.y && 
+            detection.y <= (area.y + area.height)
+          );
+        });
+        return area?.id === selectedAreaId;
+      })
+    : detections;
+
   // Process data whenever detections or time range changes
   useEffect(() => {
-    const data = processHeatmapData(detections, timeRange);
+    const data = processHeatmapData(filteredDetections, timeRange);
     renderHeatmap(data);
     
     // Calculate total people detected within time range
-    const filteredDetections = filterByTimeRange(detections, timeRange);
-    const total = filteredDetections.reduce((sum, detection) => sum + detection.count, 0);
+    const timeFilteredDetections = filterByTimeRange(filteredDetections, timeRange);
+    const total = timeFilteredDetections.reduce((sum, detection) => sum + detection.count, 0);
     setPeopleCounted(total);
     
     // Find hotspot (area with most people)
-    if (filteredDetections.length > 0) {
-      const hotspotDetection = filteredDetections.reduce(
+    if (timeFilteredDetections.length > 0) {
+      const hotspotDetection = timeFilteredDetections.reduce(
         (max, detection) => max.count > detection.count ? max : detection
       );
       setHotspot({
@@ -55,7 +74,7 @@ const HeatmapVisualizer: React.FC<HeatmapVisualizerProps> = ({
     } else {
       setHotspot(null);
     }
-  }, [detections, timeRange, heatmapConfig]);
+  }, [filteredDetections, timeRange, heatmapConfig]);
 
   // Render the heatmap on canvas
   const renderHeatmap = (data: HeatmapData) => {
@@ -110,13 +129,18 @@ const HeatmapVisualizer: React.FC<HeatmapVisualizerProps> = ({
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      const data = processHeatmapData(detections, timeRange);
+      const data = processHeatmapData(filteredDetections, timeRange);
       renderHeatmap(data);
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [detections, timeRange]);
+  }, [filteredDetections, timeRange]);
+
+  // Get the name of the selected area
+  const selectedAreaName = selectedAreaId 
+    ? areas.find(area => area.id === selectedAreaId)?.name || 'Unknown Area'
+    : 'All Areas';
 
   return (
     <Card className={`overflow-hidden ${className}`}>
@@ -134,6 +158,23 @@ const HeatmapVisualizer: React.FC<HeatmapVisualizerProps> = ({
         </div>
         
         <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            value={selectedAreaId || ''}
+            onValueChange={(value) => setSelectedAreaId(value || null)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Areas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Areas</SelectItem>
+              {areas.map((area) => (
+                <SelectItem key={area.id} value={area.id}>
+                  {area.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Button
             size="sm"
             variant={showFloorPlan ? "default" : "outline"}
@@ -166,7 +207,8 @@ const HeatmapVisualizer: React.FC<HeatmapVisualizerProps> = ({
         >
           {showFloorPlan && (
             <FloorPlan 
-              areas={areas} 
+              areas={areas}
+              highlightAreaId={selectedAreaId}
               className="absolute inset-0 z-10 bg-opacity-95"
             />
           )}
