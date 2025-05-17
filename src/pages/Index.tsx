@@ -7,6 +7,7 @@ import { Detection, FloorPlanArea, TimeRange } from "@/types";
 import HeatmapVisualizer from "@/components/HeatmapVisualizer";
 import TimeSelector from "@/components/TimeSelector";
 import VisitorStatistics from "@/components/VisitorStatistics";
+import FloorPlanManager from "@/components/FloorPlanManager";
 import { dummyVisitorData } from "@/data/visitorData";
 
 const Index = () => {
@@ -16,8 +17,8 @@ const Index = () => {
     end: Date.now() // now
   });
   
-  // Exhibition floor plan areas
-  const exhibitionAreas: FloorPlanArea[] = [
+  // Exhibition floor plan areas - now managed via the FloorPlanManager
+  const [exhibitionAreas, setExhibitionAreas] = useState<FloorPlanArea[]>([
     { id: "entrance", name: "Main Entrance", x: 45, y: 5, width: 10, height: 5, type: "entrance" },
     { id: "exhibit1", name: "Modern Art", x: 10, y: 15, width: 25, height: 25, type: "exhibit" },
     { id: "exhibit2", name: "Sculptures", x: 10, y: 45, width: 25, height: 30, type: "exhibit" },
@@ -29,7 +30,7 @@ const Index = () => {
     { id: "passage2", name: "North Gallery", x: 38, y: 15, width: 2, height: 60, type: "passage" },
     { id: "passage3", name: "South Gallery", x: 60, y: 15, width: 2, height: 60, type: "passage" },
     { id: "cafe", name: "Café", x: 40, y: 80, width: 20, height: 15, type: "exhibit" }
-  ];
+  ]);
   
   // Create a map of area IDs to area names
   const areaNameMap = exhibitionAreas.reduce<Record<string, string>>((acc, area) => {
@@ -76,6 +77,7 @@ const Index = () => {
             <TabsList>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="visitorData">Visitor Data</TabsTrigger>
+              <TabsTrigger value="floorplan">Floor Plan</TabsTrigger>
               <TabsTrigger value="setup">Setup Guide</TabsTrigger>
             </TabsList>
             
@@ -116,6 +118,17 @@ const Index = () => {
                       </tbody>
                     </table>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="floorplan">
+              <Card>
+                <CardContent className="pt-6">
+                  <FloorPlanManager 
+                    areas={exhibitionAreas} 
+                    onAreasChange={setExhibitionAreas} 
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

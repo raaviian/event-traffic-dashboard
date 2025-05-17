@@ -1,4 +1,5 @@
-import { Detection, TimeRange, HeatmapData, VisitorData } from '@/types';
+
+import { Detection, TimeRange, HeatmapData, VisitorData, FloorPlanArea } from '@/types';
 import { dummyVisitorData, convertVisitorDataToDetections } from '@/data/visitorData';
 
 // Generate mock detection data
@@ -109,10 +110,10 @@ export const processHeatmapData = (
   };
 };
 
-// Format timestamp for display
+// Format timestamp for display - 24-hour format
 export const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
 // Get color for intensity value (0-1)
@@ -127,7 +128,7 @@ export const getIntensityColor = (intensity: number): string => {
   }
 };
 
-// Generate timestamps for last 24 hours at 15 min intervals
+// Generate timestamps for last 24 hours at 15 min intervals - 24-hour format
 export const generateTimeOptions = (): { label: string; value: number }[] => {
   const now = new Date();
   now.setMinutes(Math.floor(now.getMinutes() / 15) * 15, 0, 0); // Round to nearest 15 min
@@ -136,7 +137,7 @@ export const generateTimeOptions = (): { label: string; value: number }[] => {
   for (let i = 0; i < 96; i++) { // 24 hours * 4 (15-min intervals)
     const time = new Date(now.getTime() - (i * 15 * 60 * 1000));
     options.push({
-      label: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      label: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
       value: time.getTime()
     });
   }
@@ -178,5 +179,22 @@ export const getVisitorStatistics = (data: VisitorData[]) => {
     percentageFemale: totalFemales / totalVisitors * 100,
     percentageChildren: totalChildren / totalVisitors * 100,
     percentageAdults: totalAdults / totalVisitors * 100
+  };
+};
+
+// Add the following utility functions for floor plan management
+export const generateUniqueId = (): string => {
+  return `area-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+};
+
+export const getDefaultArea = (): FloorPlanArea => {
+  return {
+    id: generateUniqueId(),
+    name: 'New Area',
+    x: 40,
+    y: 40,
+    width: 20,
+    height: 20,
+    type: 'exhibit'
   };
 };
