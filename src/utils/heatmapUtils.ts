@@ -1,18 +1,29 @@
-
-import { Detection, TimeRange, HeatmapData } from '@/types';
+import { Detection, TimeRange, HeatmapData, VisitorData } from '@/types';
+import { dummyVisitorData, convertVisitorDataToDetections } from '@/data/visitorData';
 
 // Generate mock detection data
 export const generateMockData = (count: number = 500): Detection[] => {
-  const now = Date.now();
-  const hourAgo = now - (60 * 60 * 1000);
+  // Use our dummy visitor data when available, supplement with random data
+  const visitorDetections = convertVisitorDataToDetections(dummyVisitorData);
   
-  return Array.from({ length: count }, (_, i) => ({
-    id: `detection-${i}`,
-    x: Math.random() * 100, // 0-100% of canvas width
-    y: Math.random() * 100, // 0-100% of canvas height
-    timestamp: hourAgo + (Math.random() * (now - hourAgo)), // Random time in the last hour
-    count: 1 + Math.floor(Math.random() * 5) // 1-5 people detected
-  }));
+  // If we need more data points than what's in our visitor data, generate random ones
+  if (count > visitorDetections.length) {
+    const now = Date.now();
+    const hourAgo = now - (60 * 60 * 1000);
+    
+    const additionalCount = count - visitorDetections.length;
+    const randomDetections = Array.from({ length: additionalCount }, (_, i) => ({
+      id: `detection-random-${i}`,
+      x: Math.random() * 100, // 0-100% of canvas width
+      y: Math.random() * 100, // 0-100% of canvas height
+      timestamp: hourAgo + (Math.random() * (now - hourAgo)), // Random time in the last hour
+      count: 1 + Math.floor(Math.random() * 5) // 1-5 people detected
+    }));
+    
+    return [...visitorDetections, ...randomDetections];
+  }
+  
+  return visitorDetections;
 };
 
 // Filter detections by time range
@@ -130,4 +141,42 @@ export const generateTimeOptions = (): { label: string; value: number }[] => {
     });
   }
   return options;
+};
+
+// New utility function to get visitor statistics
+export const getVisitorStatistics = (data: VisitorData[]) => {
+  const totalVisitors = data.reduce((sum, item) => sum + item.total, 0);
+  const totalMales = data.reduce((sum, item) => sum + item.genderMale, 0);
+  const totalFemales = data.reduce((sum, item) => sum + item.genderFemale, 0);
+  const totalChildren = data.reduce((sum, item) => sum + item.child, 0);
+  const totalAdults = data.reduce((sum, item) => sum + item.adult, 0);
+  
+  // Calculate area frequencies
+  const areaFrequency: Record<string, number> = {};
+  data.forEach(item => {
+    if (item.areaId) {
+      areaFrequency[item.areaId] = (areaFrequency[item.areaId] || 0) + item.total;
+    }
+  });
+  
+  // Find busiest area
+  let busiestArea = { id: '', count: 0 };
+  Object.entries(areaFrequency).forEach(([id, count]) => {
+    if (count > busiestArea.count) {
+      busiestArea = { id, count };
+    }
+  });
+  
+  return {
+    totalVisitors,
+    totalMales,
+    totalFemales,
+    totalChildren,
+    totalAdults,
+    busiestArea,
+    percentageMale: totalMales / totalVisitors * 100,
+    percentageFemale: totalFemales / totalVisitors * 100,
+    percentageChildren: totalChildren / totalVisitors * 100,
+    percentageAdults: totalAdults / totalVisitors * 100
+  };
 };

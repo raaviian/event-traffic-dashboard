@@ -34,3 +34,23 @@ export interface HeatmapConfig {
   maxOpacity: number;
   minOpacity: number;
 }
+
+// New interface for the visitor data from the table
+export interface VisitorData {
+  id: number;
+  eventId: number;
+  total: number;
+  genderMale: number;
+  child: number;
+  genderFemale: number;
+  adult: number;
+  isDeleted: boolean;
+  createdDate: string;
+  updatedDate: string;
+  createdBy: string;
+  updatedBy: string;
+  // Additional field to link to spatial data
+  areaId?: string;
+  x?: number;
+  y?: number;
+}

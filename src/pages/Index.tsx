@@ -6,6 +6,8 @@ import { generateMockData } from "@/utils/heatmapUtils";
 import { Detection, FloorPlanArea, TimeRange } from "@/types";
 import HeatmapVisualizer from "@/components/HeatmapVisualizer";
 import TimeSelector from "@/components/TimeSelector";
+import VisitorStatistics from "@/components/VisitorStatistics";
+import { dummyVisitorData } from "@/data/visitorData";
 
 const Index = () => {
   const [detections, setDetections] = useState<Detection[]>([]);
@@ -28,6 +30,12 @@ const Index = () => {
     { id: "passage3", name: "South Gallery", x: 60, y: 15, width: 2, height: 60, type: "passage" },
     { id: "cafe", name: "Café", x: 40, y: 80, width: 20, height: 15, type: "exhibit" }
   ];
+  
+  // Create a map of area IDs to area names
+  const areaNameMap = exhibitionAreas.reduce<Record<string, string>>((acc, area) => {
+    acc[area.id] = area.name;
+    return acc;
+  }, {});
   
   // Generate mock detection data on component mount
   useEffect(() => {
@@ -67,49 +75,49 @@ const Index = () => {
           <Tabs defaultValue="analytics">
             <TabsList>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="visitorData">Visitor Data</TabsTrigger>
               <TabsTrigger value="setup">Setup Guide</TabsTrigger>
             </TabsList>
             
             <TabsContent value="analytics" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="py-4">
-                    <CardTitle className="text-sm font-medium">Total Visitors</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {detections.reduce((sum, d) => sum + d.count, 0)}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Across all time periods
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="py-4">
-                    <CardTitle className="text-sm font-medium">Busiest Area</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">Modern Art</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      26% of total traffic
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="py-4">
-                    <CardTitle className="text-sm font-medium">Peak Time</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">2:00 PM - 4:00 PM</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Based on historical data
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              <VisitorStatistics data={dummyVisitorData} areaNameMap={areaNameMap} />
+            </TabsContent>
+            
+            <TabsContent value="visitorData">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left font-medium p-2">ID</th>
+                          <th className="text-left font-medium p-2">Event</th>
+                          <th className="text-left font-medium p-2">Total</th>
+                          <th className="text-left font-medium p-2">Male</th>
+                          <th className="text-left font-medium p-2">Female</th>
+                          <th className="text-left font-medium p-2">Child</th>
+                          <th className="text-left font-medium p-2">Adult</th>
+                          <th className="text-left font-medium p-2">Created Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dummyVisitorData.map((visitor) => (
+                          <tr key={visitor.id} className="border-b hover:bg-muted/50">
+                            <td className="p-2">{visitor.id}</td>
+                            <td className="p-2">{visitor.eventId}</td>
+                            <td className="p-2">{visitor.total}</td>
+                            <td className="p-2">{visitor.genderMale}</td>
+                            <td className="p-2">{visitor.genderFemale}</td>
+                            <td className="p-2">{visitor.child}</td>
+                            <td className="p-2">{visitor.adult}</td>
+                            <td className="p-2">{visitor.createdDate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="setup">
