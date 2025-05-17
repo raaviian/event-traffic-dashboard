@@ -1,5 +1,5 @@
 
-import { VisitorData } from '@/types';
+import { VisitorData, Detection } from '@/types';
 
 // Generate dummy data based on the provided table structure
 export const dummyVisitorData: VisitorData[] = [
